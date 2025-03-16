@@ -1,0 +1,142 @@
+Bagian-Bagian Kode
+1. Inisialisasi Variabel
+
+float rotasiLenganX = 0.0, rotasiLenganY = 0.0;
+float rotasiPergelangan = 0.0;
+float rotasiJari[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
+bool animasiOtomatis = false;
+rotasiLenganX dan rotasiLenganY → mengontrol rotasi lengan di sumbu X dan Y.
+rotasiPergelangan → mengontrol rotasi pergelangan tangan.
+rotasiJari[5] → mengontrol gerakan kelima jari.
+animasiOtomatis → jika true, tangan akan bergerak sendiri.
+
+2. Fungsi Pencahayaan
+
+void setupLighting() {
+    GLfloat ambientLight[] = {0.3, 0.3, 0.3, 1.0};
+    GLfloat diffuseLight[] = {0.8, 0.8, 0.8, 1.0};
+    GLfloat specularLight[] = {1.0, 1.0, 1.0, 1.0};
+    GLfloat lightPosition[] = {2.0, 5.0, 5.0, 1.0};
+
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, specularLight);
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+
+    glEnable(GL_COLOR_MATERIAL);
+    glShadeModel(GL_SMOOTH);
+}
+Menambahkan efek cahaya untuk tampilan lebih realistis.
+Menggunakan GL_LIGHT0 sebagai sumber pencahayaan.
+3. Fungsi Menggambar Komponen
+a) Menggambar Silinder untuk Lengan & Jari
+cpp
+Salin
+Edit
+void drawCylinder(float radius, float height) {
+    GLUquadric* quad = gluNewQuadric();
+    gluQuadricNormals(quad, GLU_SMOOTH);
+    gluCylinder(quad, radius, radius, height, 20, 20);
+    gluDeleteQuadric(quad);
+}
+Membuat objek silinder untuk lengan dan jari.
+Menggunakan gluCylinder untuk menggambar bentuk silinder.
+b) Menggambar Bola untuk Sendi
+
+void drawSphere(float radius) {
+    glutSolidSphere(radius, 30, 30);
+}
+Menggunakan glutSolidSphere untuk menggambar sendi pada tangan.
+c) Menggambar Jari
+
+void drawFinger(float rotasi) {
+    glPushMatrix();
+    glRotatef(rotasi, 1, 0, 0);
+    drawCylinder(0.08, 0.3);
+    glTranslatef(0.0, 0.0, 0.3);
+    drawSphere(0.08);
+    drawCylinder(0.07, 0.2);
+    glPopMatrix();
+}
+Jari terdiri dari dua segmen (mirip ruas jari manusia).
+Rotasi jari bisa dikontrol dengan keyboard.
+d) Menggambar Tangan Robot
+
+void drawHand() {
+    glPushMatrix();
+
+    // Lengan bawah
+    glColor3f(0.7, 0.2, 0.2); // Warna merah metalik
+    drawCylinder(0.3, 1.5);
+    glTranslatef(0.0, 0.0, 1.5);
+    drawSphere(0.3);
+
+    // Pergelangan tangan
+    glRotatef(rotasiPergelangan, 0, 1, 0);
+    glColor3f(0.8, 0.5, 0.5); // Warna merah muda
+    drawCylinder(0.4, 0.3);
+    glTranslatef(0.0, 0.0, 0.3);
+    drawSphere(0.4);
+
+    // Jari-jari
+    glColor3f(0.8, 0.8, 0.8); // Warna abu-abu metalik
+    for (int i = 0; i < 5; i++) {
+        glPushMatrix();
+        float offset = (i - 2) * 0.2;
+        glTranslatef(offset, 0.2, 0.1);
+        drawFinger(rotasiJari[i]);
+        glPopMatrix();
+    }
+
+    glPopMatrix();
+}
+Membentuk tangan dengan lengan, pergelangan, dan lima jari.
+Warna merah dan abu-abu metalik agar terlihat lebih futuristik.
+4. Fungsi Tampilan
+
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glLoadIdentity();
+    
+    // Kamera 3D
+    gluLookAt(2.0, 2.0, 5.0,  0.0, 0.0, 0.0,  0.0, 1.0, 0.0);
+    
+    // Rotasi lengan
+    glPushMatrix();
+    glRotatef(rotasiLenganX, 1, 0, 0);
+    glRotatef(rotasiLenganY, 0, 1, 0);
+    drawHand();
+    glPopMatrix();
+    
+    glutSwapBuffers();
+}
+Mengatur posisi kamera dengan gluLookAt.
+Menampilkan tangan dan lengan dengan rotasi yang sudah diatur.
+5. Interaksi Keyboard
+
+void keyboard(unsigned char key, int x, int y) {
+    switch (key) {
+        case 'w': rotasiLenganX -= 5; break;
+        case 's': rotasiLenganX += 5; break;
+        case 'a': rotasiLenganY -= 5; break;
+        case 'd': rotasiLenganY += 5; break;
+        case 'q': rotasiPergelangan -= 5; break;
+        case 'e': rotasiPergelangan += 5; break;
+        case '1': rotasiJari[0] = (rotasiJari[0] == 0) ? 45 : 0; break;
+        case '2': rotasiJari[1] = (rotasiJari[1] == 0) ? 45 : 0; break;
+        case '3': rotasiJari[2] = (rotasiJari[2] == 0) ? 45 : 0; break;
+        case '4': rotasiJari[3] = (rotasiJari[3] == 0) ? 45 : 0; break;
+        case '5': rotasiJari[4] = (rotasiJari[4] == 0) ? 45 : 0; break;
+        case 'm': animasiOtomatis = !animasiOtomatis; break;
+        case 27: exit(0);
+    }
+    glutPostRedisplay();
+}
+Tombol w, s, a, d → menggerakkan lengan.
+Tombol q, e → menggerakkan pergelangan.
+Tombol 1-5 → menggerakkan jari.
+Tombol m → mengaktifkan animasi otomatis.
+
+
